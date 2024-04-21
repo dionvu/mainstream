@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { exec } from 'child_process';
+import { spawn } from 'child_process';
 import { Command } from 'commander';
 import chalk from 'chalk';
 import prompts from 'prompts';
@@ -9,26 +9,15 @@ import { AnimeUrl, Anime, AnimeSearch } from './interfaces';
 
 const program = new Command();
 
-const api_url = 'https://api-consumet-org-18mp.onrender.com/anime/gogoanime/';
+const api_url = 'https://api-consumet-git-main-dionvus-projects.vercel.app/anime/gogoanime/';
 
 const error_warning = chalk.red('ERROR:');
 
 program
-  .command('watch')
-  .argument('<anime>')
-  .alias('w')
-  .action(async (anime: string) => {
-    try {
-      await fetch_anime_url(anime);
-    }
-    catch (error) {
-      console.log(error);
-    }
-  })
+  .description('CLI to keep up with all the latest and greatest anime');
 
 program
-  .command('search')
-  .alias('s')
+  .option('-a | -anime', 'searches and streams anime')
   .action(async () => {
     try {
       const prompt = "Search: ";
@@ -45,19 +34,27 @@ program.parse();
 
 async function watch_anime(name: string) {
 
+  const selection_type = 'select';
+
+  const enum Prompts {
+    anime = "Pick an anime",
+    episode = "Pick an episode",
+    quality = "Select video quality"
+  };
+
   try {
     const search_results: AnimeSearch = await fetch_anime_search(name);
 
     const selection = [];
-    for (let i = 0; i < Math.min(search_results.results.length, 20); i++)
+    for (let i = 0; i < search_results.results.length; i++)
       selection.push({ title: `${search_results.results[i].id}`, value: `${search_results.results[i].id}` });
 
     const user_selection = await prompts({
-      type: 'select',
+      type: selection_type,
       name: 'choice',
-      message: 'Pick an anime',
+      message: Prompts.anime,
       choices: selection,
-      initial: 1
+      initial: 0
     });
 
     const anime: Anime = await fetch_anime_episodes(user_selection.choice);
@@ -68,11 +65,11 @@ async function watch_anime(name: string) {
       episode_selection.push({ title: `${anime.episodes[i].id}`, value: `${anime.episodes[i].id}` });
 
     const user_episode_selection = await prompts({
-      type: 'select',
+      type: selection_type,
       name: 'choice',
-      message: 'Pick an episode',
+      message: Prompts.episode,
       choices: episode_selection,
-      initial: 1
+      initial: 0
     });
 
     const urls: AnimeUrl = await fetch_anime_url(user_episode_selection.choice);
@@ -83,20 +80,22 @@ async function watch_anime(name: string) {
       quality_selection.push({ title: `${urls.sources[i].quality}`, value: `${urls.sources[i].quality}` });
 
     const user_quality_selection = await prompts({
-      type: 'select',
+      type: selection_type,
       name: 'choice',
-      message: 'Pick an episode',
+      message: Prompts.quality,
       choices: quality_selection,
-      initial: 1
+      initial: 4
     });
+
+    let mpv_process;
 
     for (let i = 0; i < urls.sources.length; i++) {
       if (urls.sources[i].quality === user_quality_selection.choice)
-        exec(`mpv ${urls.sources[i].url}`);
+        mpv_process = spawn('mpv', [urls.sources[i].url], { detached: true, stdio: 'ignore' });
     }
   }
   catch (error) {
-    return Promise.reject(`${chalk.red('ERROR')}`);
+    return Promise.reject(error);
   }
 }
 
@@ -111,7 +110,7 @@ async function fetch_anime_search(name: string) {
     const anime: AnimeSearch = await response.json();
 
     if (anime.results.length === 0)
-      return Promise.reject(`${chalk.red(`No Search results found for ${name}`)}`);
+      return Promise.reject(`${chalk.red(`Search results not found for ${name}`)}`);
 
     return anime;
   }
