@@ -1,15 +1,20 @@
 #!/usr/bin/env node
 
-import axios from 'axios';
 import chalk from 'chalk';
 import prompts, { Choice, PromptType } from 'prompts';
+import path from 'path';
+import url from 'url';
 import { spawn } from 'child_process';
-import { Command } from 'commander';
 import { Anime_Info } from './interfaces';
+import { Command } from 'commander';
 import { Anime_Streaming } from './interfaces';
 import { Anime_Search_Results } from './interfaces';
-import { Anime_Recent_Episodes } from './interfaces';
 import { LocalStorage } from 'node-localstorage';
+
+import { fetch_recent_anime_eps } from './api.js';
+import { fetch_anime_url } from './api.js';
+import { fetch_anime_info } from './api.js';
+import { fetch_anime_search } from './api.js';
 
 const program = new Command();
 
@@ -22,12 +27,16 @@ const Prompts = {
   error: chalk.red('ERR:')
 };
 
-// Optionally replace this with your own api url.
-const api_url = 'https://api-consumet-git-main-dionvus-projects.vercel.app/anime/gogoanime/';
+import fs from 'fs';
 
-const player = 'mpv';
+const program_dir = path.dirname(url.fileURLToPath(import.meta.url));
 
-const local_storage = new LocalStorage('./local_storage');
+const local_storage_path = path.join(program_dir, 'local_storage');
+
+if (!fs.existsSync(local_storage_path))
+  fs.mkdirSync(local_storage_path, { recursive: true });
+
+const local_storage = new LocalStorage(local_storage_path);
 
 program
   .description('CLI to keep up with all the latest and greatest anime');
@@ -37,8 +46,9 @@ program
   .action(async () => {
     const recents = JSON.parse(local_storage.getItem('recent-anime') || '[]');
 
-    for (let i = 0; i < Math.min(100, recents.length); i++)
+    for (let i = 0; i < Math.min(100, recents.length); i++) {
       console.log(recents[i]);
+    }
   })
 program
   .action(async () => {
@@ -87,19 +97,6 @@ async function add_to_recent(id: string) {
   }
 }
 
-async function fetch_recent_anime_eps(page_num: number) {
-
-  try {
-    const response = await axios.get(`${api_url}/recent-episodes`, { params: { page: page_num, type: 1 } });
-
-    const recent_episodes: Anime_Recent_Episodes = response.data;
-
-    return recent_episodes;
-  }
-  catch (error) {
-    return Promise.reject(error);
-  }
-}
 
 async function watch_recent_anime(id: string) {
 
@@ -154,7 +151,14 @@ async function watch_anime(search_input: string) {
   }
 }
 
-async function play_episode(episode_id: string) {
+/**
+ * @brief Spawns an instance of mpv and plays the episode from given episode id.
+ *
+ * @param episode_id The id of the episode to launch.
+ */
+async function play_episode(episode_id: string): Promise<void> {
+
+  const player = 'mpv';
 
   const urls: Anime_Streaming = await fetch_anime_url(episode_id);
 
@@ -171,66 +175,6 @@ async function play_episode(episode_id: string) {
       spawn(player, [urls.sources[i].url], { detached: true, stdio: 'ignore' });
       break;
     }
-  }
-}
-
-async function fetch_anime_search(name: string) {
-
-  // User inputs bunch of spaces or nothing.
-  if (!name || name.trim() === '')
-    return Promise.reject(`${chalk.red('Empty Input')}`);
-
-  try {
-    const response = await axios.get(`${api_url}${name}`);
-
-    const anime: Anime_Search_Results = response.data;
-
-    if (anime.results.length === 0)
-      return Promise.reject(`${chalk.red(`Search results not found for ${name}`)}`);
-
-    return anime;
-  }
-  catch (error) {
-    return Promise.reject(`${Prompts.error} Unable to fetch search results for ${name}`);
-  }
-}
-
-/**
- * @brief Fetches streaming urls for given episode id.
- *
- * @param id The episode id.
- * @returns Anime_Streaming object.
- */
-async function fetch_anime_url(id: string) {
-
-  try {
-    const response = await axios.get(`${api_url}watch/${id}?server=vidstreaming`);
-
-    const anime_url: Anime_Streaming = response.data;
-
-    return anime_url;
-  }
-  catch (error) {
-    return Promise.reject(`${Prompts.error} Unable to fetch streaming url for ${id}!`);
-  }
-}
-
-/**
- * @brief Provides details about a show.
- *
- * @param id The ID of the specific anime fetched from search.
- * @returns Details about the provided anime.
- */
-async function fetch_anime_info(id: string) {
-
-  try {
-    const response = await axios.get(`${api_url}info/${id}`);
-    const anime_details: Anime_Info = response.data;
-
-    return anime_details;
-  }
-  catch (error) {
-    return Promise.reject(`${Prompts.error} Unable to fetch anime details for ${id}!`);
   }
 }
 
