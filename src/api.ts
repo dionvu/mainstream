@@ -1,13 +1,13 @@
-import axios from "axios";
-
-import { User_Prompts } from "./utils.js";
+import { user_error } from "./utils.js";
 
 import {
   Anime_Info,
   Anime_Streaming,
   Anime_Search_Results,
   Anime_Recent_Episodes,
-} from "./interfaces";
+} from "./interfaces.js";
+
+import axios from "axios";
 
 const api_url =
   "https://api-consumet-git-main-dionvus-projects.vercel.app/anime/gogoanime/";
@@ -32,7 +32,7 @@ export async function fetch_recent_anime_eps(
     return recent_episodes;
   } catch (error) {
     return Promise.reject(
-      `${User_Prompts.error} Failed to fetch recent anime episodes.`,
+      `${user_error} Failed to fetch recent anime episodes.`,
     );
   }
 }
@@ -49,7 +49,7 @@ export async function fetch_anime_search(
 ): Promise<Anime_Search_Results> {
   // User inputs bunch of spaces or nothing.
   if (!name || name.trim() === "")
-    return Promise.reject(`${User_Prompts.error} No Input.`);
+    return Promise.reject(`${user_error} No Input.`);
 
   try {
     const response = await axios.get(`${api_url}${name}`);
@@ -58,13 +58,13 @@ export async function fetch_anime_search(
 
     if (anime.results.length === 0)
       return Promise.reject(
-        `${User_Prompts.error} Search results not found for ${name}`,
+        `${user_error} Search results not found for ${name}`,
       );
 
     return anime;
   } catch (error) {
     return Promise.reject(
-      `${User_Prompts.error} Unable to fetch search results for ${name}`,
+      `${user_error} Unable to fetch search results for ${name}`,
     );
   }
 }
@@ -83,7 +83,7 @@ export async function fetch_anime_info(id: string) {
     return anime_details;
   } catch (error) {
     return Promise.reject(
-      `${User_Prompts.error} Unable to fetch anime details for ${id}.`,
+      `${user_error} Unable to fetch anime details for ${id}.`,
     );
   }
 }
@@ -105,7 +105,7 @@ export async function fetch_anime_url(id: string) {
     return anime_url;
   } catch (error) {
     return Promise.reject(
-      `${User_Prompts.error} Unable to fetch streaming url for ${id}.`,
+      `${user_error} Unable to fetch streaming url for ${id}.`,
     );
   }
 }

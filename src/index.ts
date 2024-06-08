@@ -1,17 +1,19 @@
 #!/usr/bin/env node
 
 import { user_input, Input_Style, User_Prompts, ascii_art } from "./utils.js";
+
 import { fetch_recent_anime_eps } from "./api.js";
+
 import {
   watch_anime,
   watch_current_anime,
   watch_recent_anime,
 } from "./anime.js";
 
-import { Choice } from "prompts";
 import { Command } from "commander";
-import path from "path";
+import { Choice } from "prompts";
 import chalk from "chalk";
+import path from "path";
 import url from "url";
 import fs from "fs";
 

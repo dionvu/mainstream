@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-import { User_Prompts } from "./utils.js";
-
 import {
   Anime_Streaming,
   Anime_Info,
@@ -14,23 +12,24 @@ import {
   fetch_anime_info,
 } from "./api.js";
 
-import { user_input, Input_Style } from "./utils.js";
+import { user_input, User_Prompts, Input_Style, user_error } from "./utils.js";
 
 import { LocalStorage } from "node-localstorage";
 import { spawn } from "child_process";
-import url from "url";
 import path from "path";
+import url from "url";
 import fs from "fs";
 
 const program_dir = path.dirname(url.fileURLToPath(import.meta.url));
-
 const local_storage_path = path.join(program_dir, "local_storage");
+const local_storage = new LocalStorage(local_storage_path);
 
 if (!fs.existsSync(local_storage_path))
   fs.mkdirSync(local_storage_path, { recursive: true });
 
-const local_storage = new LocalStorage(local_storage_path);
-
+/**
+ * @brief Browse recently played shows and plays selection.
+ */
 export async function watch_recent_anime() {
   try {
     const recents: Anime_Info[] = await JSON.parse(
@@ -51,15 +50,9 @@ export async function watch_recent_anime() {
       anime_selection,
     );
 
-    const anime: Anime_Info = recents[user_anime_choice_index.choice];
+    const anime: Anime_Info = recents[user_anime_choice_index];
 
-    const episode_selection = [];
-
-    for (let i = 0; i < anime.episodes.length; i++)
-      episode_selection.push({
-        title: `${anime.episodes[i].id}`,
-        value: `${anime.episodes[i].id}`,
-      });
+    const episode_selection = get_episode_selection(anime);
 
     const user_episode_choice = await user_input(
       Input_Style.select,
@@ -68,25 +61,22 @@ export async function watch_recent_anime() {
     );
 
     add_to_recent(anime);
-    play_episode(user_episode_choice.choice);
+
+    play_episode(user_episode_choice);
   } catch (error) {
-    return Promise.reject(
-      `${User_Prompts.error} Failed to watch recent anime.`,
-    );
+    return Promise.reject(`${user_error} Failed to watch recent anime.`);
   }
 }
 
+/**
+ * @brief Browses recent/current shows and plays selection.
+ * @param id The id of the anime.
+ */
 export async function watch_current_anime(id: string) {
   try {
     const anime: Anime_Info = await fetch_anime_info(id);
 
-    const episode_selection = [];
-
-    for (let i = 0; i < anime.episodes.length; i++)
-      episode_selection.push({
-        title: `${anime.episodes[i].id}`,
-        value: `${anime.episodes[i].id}`,
-      });
+    const episode_selection = get_episode_selection(anime);
 
     const user_episode_selection = await user_input(
       Input_Style.select,
@@ -95,9 +85,10 @@ export async function watch_current_anime(id: string) {
     );
 
     add_to_recent(anime);
-    play_episode(user_episode_selection.choice);
+
+    play_episode(user_episode_selection);
   } catch (error) {
-    return Promise.reject(`${User_Prompts.error}`);
+    return Promise.reject(`${user_error}`);
   }
 }
 
@@ -129,13 +120,7 @@ export async function watch_anime(search_input: string) {
 
     const anime: Anime_Info = await fetch_anime_info(user_selection);
 
-    const episode_selection = [];
-
-    for (let i = 0; i < anime.episodes.length; i++)
-      episode_selection.push({
-        title: `${anime.episodes[i].id}`,
-        value: `${anime.episodes[i].id}`,
-      });
+    const episode_selection = get_episode_selection(anime);
 
     const user_episode_selection = await user_input(
       Input_Style.select,
@@ -145,10 +130,10 @@ export async function watch_anime(search_input: string) {
 
     add_to_recent(anime);
 
-    play_episode(user_episode_selection.choice);
+    play_episode(user_episode_selection);
   } catch (error) {
     return Promise.reject(
-      `${User_Prompts.error} Failed to fetch search info for ${search_input}.`,
+      `${user_error} Failed to fetch search info for ${search_input}.`,
     );
   }
 }
@@ -193,20 +178,43 @@ async function play_episode(episode_id: string) {
   }
 }
 
+function get_episode_selection(anime: Anime_Info) {
+  const episode_selection = [];
+
+  for (let i = 0; i < anime.episodes.length; i++)
+    episode_selection.push({
+      title: `${anime.episodes[i].id}`,
+      value: `${anime.episodes[i].id}`,
+    });
+
+  return episode_selection;
+}
+
+/**
+ * @brief Adds an anime to recents or bumps it's position to the front if
+ * there is already an entry.
+ * @param anime The Anime_Info object.
+ */
 async function add_to_recent(anime: Anime_Info) {
   try {
     let recents: Anime_Info[] = await JSON.parse(
       local_storage.getItem("recent-anime.json") || "[]",
     );
 
-    recents = recents.filter((ani) => ani !== anime);
+    recents = recents.filter((ani) => ani != anime);
+
+    for (let i = recents.length - 1; i >= 0; i--) {
+      if (recents[i].title == anime.title) {
+        recents.splice(i, 1);
+      }
+    }
 
     recents.unshift(anime);
 
     local_storage.setItem("recent-anime.json", JSON.stringify(recents));
   } catch (error) {
     return Promise.reject(
-      `${User_Prompts.error} Unable to add ${anime.title} to recents watch list.`,
+      `${user_error} Unable to add ${anime.title} to recents watch list.`,
     );
   }
 }
