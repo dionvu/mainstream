@@ -1,4 +1,5 @@
 import chalk from "chalk";
+import prompts, { Choice, PromptType } from "prompts";
 
 export const User_Prompts = {
   search: "Seach for an anime",
@@ -8,3 +9,55 @@ export const User_Prompts = {
   recent: "Choose from recent episodes",
   error: chalk.red("ERR:"),
 };
+
+export const ascii_art = `
+⡆⣿⣿⣦⠹⣳⣳⣕⢅⠈⢗⢕⢕⢕⢕⢕⢈⢆⠟⠋⠉⠁⠉⠉⠁⠈⠼⢐⢕
+⡗⢰⣶⣶⣦⣝⢝⢕⢕⠅⡆⢕⢕⢕⢕⢕⣴⠏⣠⡶⠛⡉⡉⡛⢶⣦⡀⠐⣕
+⡝⡄⢻⢟⣿⣿⣷⣕⣕⣅⣿⣔⣕⣵⣵⣿⣿⢠⣿⢠⣮⡈⣌⠨⠅⠹⣷⡀⢱
+⡝⡵⠟⠈⢀⣀⣀⡀⠉⢿⣿⣿⣿⣿⣿⣿⣿⣼⣿⢈⡋⠴⢿⡟⣡⡇⣿⡇⡀
+⡝⠁⣠⣾⠟⡉⡉⡉⠻⣦⣻⣿⣿⣿⣿⣿⣿⣿⣿⣧⠸⣿⣦⣥⣿⡇⡿⣰⢗
+⠁⢰⣿⡏⣴⣌⠈⣌⠡⠈⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣬⣉⣉⣁⣄⢖⢕⢕
+⡀⢻⣿⡇⢙⠁⠴⢿⡟⣡⡆⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣵⣵
+⡻⣄⣻⣿⣌⠘⢿⣷⣥⣿⠇⣿⣿⣿⣿⣿⣿⠛⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+⣷⢄⠻⣿⣟⠿⠦⠍⠉⣡⣾⣿⣿⣿⣿⣿⣿⢸⣿⣦⠙⣿⣿⣿⣿⣿⣿⣿⣿
+⡕⡑⣑⣈⣻⢗⢟⢞⢝⣻⣿⣿⣿⣿⣿⣿⣿⠸⣿⠿⠃⣿⣿⣿⣿⣿⣿⡿⠁ 
+`;
+
+/**
+ * Choices of user input.
+ */
+export enum Input_Style {
+  text = "text",
+  select = "select",
+  autocomplete = "autocomplete",
+}
+
+/**
+ * @brief UserPrompts user input in given style through given selection.
+ *
+ * @param style The style of input.
+ * @param msg The prompt message.
+ * @param options The choices user has.
+ * @param initial Initial selected position (only relevant for 'select' type).
+ *
+ * @returns User's input.
+ */
+export async function user_input(
+  style: Input_Style,
+  msg: string,
+  options: Choice[] = [],
+  initial: number = 0,
+) {
+  try {
+    const response = await prompts({
+      type: style as PromptType,
+      name: "choice",
+      message: msg,
+      choices: options,
+      initial: initial,
+    });
+    return response.choice;
+  } catch {
+    return Promise.reject(`${User_Prompts.error} Invalid user input.`);
+  }
+}

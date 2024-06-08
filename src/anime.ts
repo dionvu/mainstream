@@ -6,7 +6,7 @@ import {
   Anime_Streaming,
   Anime_Info,
   Anime_Search_Results,
-} from "./interfaces";
+} from "./interfaces.js";
 
 import {
   fetch_anime_url,
@@ -14,7 +14,7 @@ import {
   fetch_anime_info,
 } from "./api.js";
 
-import { user_input, Input_Style } from "./index.js";
+import { user_input, Input_Style } from "./utils.js";
 
 import { LocalStorage } from "node-localstorage";
 import { spawn } from "child_process";
@@ -47,7 +47,6 @@ export async function watch_recent_anime() {
 
     const user_anime_choice_index = await user_input(
       Input_Style.select,
-      "choice",
       User_Prompts.anime,
       anime_selection,
     );
@@ -64,7 +63,6 @@ export async function watch_recent_anime() {
 
     const user_episode_choice = await user_input(
       Input_Style.select,
-      "choice",
       User_Prompts.anime,
       episode_selection,
     );
@@ -92,7 +90,6 @@ export async function watch_current_anime(id: string) {
 
     const user_episode_selection = await user_input(
       Input_Style.select,
-      "choice",
       User_Prompts.episode,
       episode_selection,
     );
@@ -126,12 +123,11 @@ export async function watch_anime(search_input: string) {
 
     const user_selection = await user_input(
       Input_Style.select,
-      "choice",
       User_Prompts.anime,
       search_selection,
     );
 
-    const anime: Anime_Info = await fetch_anime_info(user_selection.choice);
+    const anime: Anime_Info = await fetch_anime_info(user_selection);
 
     const episode_selection = [];
 
@@ -143,7 +139,6 @@ export async function watch_anime(search_input: string) {
 
     const user_episode_selection = await user_input(
       Input_Style.select,
-      "choice",
       User_Prompts.episode,
       episode_selection,
     );
@@ -179,14 +174,13 @@ async function play_episode(episode_id: string) {
 
     const user_quality_selection = await user_input(
       Input_Style.select,
-      "choice",
       User_Prompts.quality,
       quality_selection,
       4,
     );
 
     for (let i = 0; i < urls.sources.length; i++) {
-      if (urls.sources[i].quality === user_quality_selection.choice) {
+      if (urls.sources[i].quality === user_quality_selection) {
         spawn(player, [urls.sources[i].url], {
           detached: true,
           stdio: "ignore",

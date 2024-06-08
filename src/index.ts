@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 
-import chalk from "chalk";
+import { user_input, Input_Style, User_Prompts, ascii_art } from "./utils.js";
+import { fetch_recent_anime_eps } from "./api.js";
+import {
+  watch_anime,
+  watch_current_anime,
+  watch_recent_anime,
+} from "./anime.js";
 
-import { User_Prompts } from "./utils.js";
-import prompts, { Choice, PromptType } from "prompts";
+import { Choice } from "prompts";
 import { Command } from "commander";
 import path from "path";
+import chalk from "chalk";
 import url from "url";
-
-import { fetch_recent_anime_eps } from "./api.js";
-
-import { watch_current_anime, watch_recent_anime } from "./anime.js";
-import { watch_anime } from "./anime.js";
-
 import fs from "fs";
 
 const program_dir = path.dirname(url.fileURLToPath(import.meta.url));
@@ -24,21 +24,10 @@ if (!fs.existsSync(local_storage_path))
 
 const program = new Command();
 
-const ascii = `
-⡆⣿⣿⣦⠹⣳⣳⣕⢅⠈⢗⢕⢕⢕⢕⢕⢈⢆⠟⠋⠉⠁⠉⠉⠁⠈⠼⢐⢕
-⡗⢰⣶⣶⣦⣝⢝⢕⢕⠅⡆⢕⢕⢕⢕⢕⣴⠏⣠⡶⠛⡉⡉⡛⢶⣦⡀⠐⣕
-⡝⡄⢻⢟⣿⣿⣷⣕⣕⣅⣿⣔⣕⣵⣵⣿⣿⢠⣿⢠⣮⡈⣌⠨⠅⠹⣷⡀⢱
-⡝⡵⠟⠈⢀⣀⣀⡀⠉⢿⣿⣿⣿⣿⣿⣿⣿⣼⣿⢈⡋⠴⢿⡟⣡⡇⣿⡇⡀
-⡝⠁⣠⣾⠟⡉⡉⡉⠻⣦⣻⣿⣿⣿⣿⣿⣿⣿⣿⣧⠸⣿⣦⣥⣿⡇⡿⣰⢗
-⠁⢰⣿⡏⣴⣌⠈⣌⠡⠈⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣬⣉⣉⣁⣄⢖⢕⢕
-⡀⢻⣿⡇⢙⠁⠴⢿⡟⣡⡆⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣵⣵
-⡻⣄⣻⣿⣌⠘⢿⣷⣥⣿⠇⣿⣿⣿⣿⣿⣿⠛⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
-⣷⢄⠻⣿⣟⠿⠦⠍⠉⣡⣾⣿⣿⣿⣿⣿⣿⢸⣿⣦⠙⣿⣿⣿⣿⣿⣿⣿⣿
-⡕⡑⣑⣈⣻⢗⢟⢞⢝⣻⣿⣿⣿⣿⣿⣿⣿⠸⣿⠿⠃⣿⣿⣿⣿⣿⣿⡿⠁ 
-`;
+program.addHelpText("beforeAll", chalk.whiteBright(ascii_art));
 
 program.description(
-  `${ascii}\n${chalk.cyan("CLI to keep up with all the latest and greatest anime!")}`,
+  `${chalk.bold(chalk.cyan("CLI to keep up with all the latest and greatest anime!"))}`,
 );
 
 program
@@ -71,13 +60,12 @@ program
 
       const input = await user_input(
         Input_Style.autocomplete,
-        "choice",
         User_Prompts.recent,
         selection,
         0,
       );
 
-      await watch_current_anime(input.choice);
+      await watch_current_anime(input);
     } catch (error) {
       console.log(error);
     }
@@ -85,56 +73,12 @@ program
 
 program.action(async () => {
   try {
-    const input = await user_input(
-      Input_Style.text,
-      "choice",
-      User_Prompts.search,
-    );
+    const input = await user_input(Input_Style.text, User_Prompts.search);
 
-    await watch_anime(input.choice);
+    await watch_anime(input);
   } catch (error) {
     console.log(error);
   }
 });
 
 program.parse();
-
-/**
- * Choices of user input.
- */
-export const enum Input_Style {
-  text = "text",
-  select = "select",
-  autocomplete = "autocomplete",
-}
-
-/**
- * @brief UserPrompts user input in given style through given selection.
- *
- * @param style The style of input.
- * @param msg The prompt message.
- * @param options The choices user has.
- * @param initial Initial selected position (only relevant for 'select' type).
- *
- * @returns User's input.
- */
-export async function user_input(
-  style: Input_Style,
-  name: string,
-  msg: string,
-  options: Choice[] = [],
-  initial: number = 0,
-) {
-  try {
-    const response = await prompts({
-      type: style as PromptType,
-      name: name,
-      message: msg,
-      choices: options,
-      initial: initial,
-    });
-    return response;
-  } catch {
-    return Promise.reject(`${User_Prompts.error} Invalid user input.`);
-  }
-}
