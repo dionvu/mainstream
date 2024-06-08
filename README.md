@@ -39,7 +39,7 @@ Browse recently watched shows.
 ### current
 
 ```
-ms c
+ms c <page number>
 ```
 Browse shows that are currently airing.
 
