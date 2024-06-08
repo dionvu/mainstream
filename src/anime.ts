@@ -178,7 +178,9 @@ async function play_episode(episode_id: string) {
   }
 }
 
-function get_episode_selection(anime: Anime_Info) {
+function get_episode_selection(
+  anime: Anime_Info,
+): { title: string; value: string }[] {
   const episode_selection = [];
 
   for (let i = 0; i < anime.episodes.length; i++)
