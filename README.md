@@ -1,6 +1,6 @@
 # mainstream
 
-A CLI to keep up with all the latest and greatest anime and keep track of your favorites.
+A CLI to keep up with all the latest and greatest anime and keep track of your favorites using [Consumet API](https://github.com/consumet/api.consumet.org/blob/main/README.md).
 
 ## installation
 
@@ -8,19 +8,12 @@ A CLI to keep up with all the latest and greatest anime and keep track of your f
 
 ```
 npm install -g mainstreamcli
-```
-
-Make sure to install dependencies.
-
-## dependencies
-
-### node-localstorage
-
-```
 npm install -g node-localstorage
 ```
 
-Required for mainstream to access recent shows stored in `~/.mainstream`.
+Node-localstorage required for mainstream to access recent shows stored in `~/.mainstream`.
+
+## dependencies
 
 ### mpv
 
@@ -32,16 +25,28 @@ Required to play anime episodes.
 
 ### search
 
-`ms s`
+```
+ms s
+```
 
 ### recent 
 
-`ms r`
-
+```
+ms r
+```
 Browse recently watched shows.
 
 ### current
 
-`ms c`
-
+```
+ms c
+```
 Browse shows that are currently airing.
+
+## uninstall
+
+```
+npm remove -g mainstreamcli
+npm remove -g node-localstorage
+cd ~ & rm -rf .mainstream
+```

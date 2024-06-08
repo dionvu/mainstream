@@ -56,7 +56,7 @@ export async function watch_recent_anime() {
 
     const user_episode_choice = await user_input(
       Input_Style.select,
-      User_Prompts.anime,
+      User_Prompts.episode,
       episode_selection,
     );
 
