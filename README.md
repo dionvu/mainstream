@@ -1,5 +1,7 @@
 # mainstream
 
+A CLI to keep up with all the latest and greatest anime and keep track of your favorites.
+
 ## installation
 
 ### npm
