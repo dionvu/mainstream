@@ -17,11 +17,11 @@ import { user_input, User_Prompts, Input_Style, user_error } from "./utils.js";
 import { LocalStorage } from "node-localstorage";
 import { spawn } from "child_process";
 import path from "path";
-import url from "url";
 import fs from "fs";
+import os from "os";
 
-const program_dir = path.dirname(url.fileURLToPath(import.meta.url));
-const local_storage_path = path.join(program_dir, "local_storage");
+const home_dir = os.homedir();
+const local_storage_path = path.join(home_dir, ".mainstream");
 const local_storage = new LocalStorage(local_storage_path);
 
 if (!fs.existsSync(local_storage_path))
@@ -64,7 +64,7 @@ export async function watch_recent_anime() {
 
     play_episode(user_episode_choice);
   } catch (error) {
-    return Promise.reject(`${user_error} Failed to watch recent anime.`);
+    return Promise.reject(`${user_error} Failed to list recent anime.`);
   }
 }
 

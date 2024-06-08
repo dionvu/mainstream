@@ -14,12 +14,13 @@ import { Command } from "commander";
 import { Choice } from "prompts";
 import chalk from "chalk";
 import path from "path";
-import url from "url";
 import fs from "fs";
 
-const program_dir = path.dirname(url.fileURLToPath(import.meta.url));
+import os from "os";
 
-const local_storage_path = path.join(program_dir, "local_storage");
+const home_dir = os.homedir();
+
+const local_storage_path = path.join(home_dir, ".mainstream");
 
 if (!fs.existsSync(local_storage_path))
   fs.mkdirSync(local_storage_path, { recursive: true });
@@ -40,7 +41,7 @@ program
     try {
       await watch_recent_anime();
     } catch (error) {
-      console.log(error);
+      //console.log(error);
     }
   });
 
@@ -69,7 +70,7 @@ program
 
       await watch_current_anime(input);
     } catch (error) {
-      console.log(error);
+      //console.log(error);
     }
   });
 
