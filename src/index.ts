@@ -74,14 +74,17 @@ program
     }
   });
 
-program.action(async () => {
-  try {
-    const input = await user_input(Input_Style.text, User_Prompts.search);
+program
+  .command("search")
+  .alias("c")
+  .action(async () => {
+    try {
+      const input = await user_input(Input_Style.text, User_Prompts.search);
 
-    await watch_anime(input);
-  } catch (error) {
-    console.log(error);
-  }
-});
+      await watch_anime(input);
+    } catch (error) {
+      console.log(error);
+    }
+  });
 
 program.parse();
